@@ -250,3 +250,78 @@ SELECT
 FROM online_retail_transaction.cohort_activity ca
 JOIN cohort_size cs
 USING (cohort_month);
+
+-- COMMAND ----------
+
+
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC # Customer Lifetime Value (CLV) Modeling
+
+-- COMMAND ----------
+
+--Choose MAX(date)-6 month as the cut-off date, in order to have 6 month for "future" afterwards
+CREATE OR REPLACE TABLE online_retail_transaction.clv_features AS
+WITH history AS (
+SELECT
+  *
+FROM online_retail_transaction.online_retail_clean
+WHERE invoice_date < '2011-06-09'
+  AND is_anonymous = 0
+  AND is_return = 0
+),
+future_rev AS (
+  SELECT
+    customer_id,
+    SUM(revenue) AS future_6M_revenue
+  FROM online_retail_transaction.online_retail_clean
+  WHERE invoice_date >= '2011-06-09'
+    AND invoice_date <= '2011-12-09'
+    AND is_anonymous = 0
+    AND is_return = 0
+  GROUP BY customer_id
+),
+agg AS (
+  SELECT
+    customer_id,
+    COUNT(DISTINCT invoice_number) AS total_orders,
+    SUM(revenue) AS total_revenue,
+    AVG(revenue) AS avg_order_value,
+    MIN(invoice_date) AS first_order_date,
+    MAX(invoice_date) AS last_order_date
+    FROM history
+    GROUP BY customer_id
+)
+SELECT
+  agg.*,
+  DATEDIFF('2011-06-09', first_order_date) AS days_since_first,
+  DATEDIFF('2011-06-09', last_order_date) AS days_since_last,
+  COALESCE(future_rev.future_6M_revenue,0) AS future_6M_revenue
+FROM agg
+LEFT JOIN future_rev
+USING (customer_id);
+
+
+-- COMMAND ----------
+
+SELECT * FROM online_retail_transaction.clv_features;
+
+-- COMMAND ----------
+
+--Bucket CLV into quintiles
+CREATE OR REPLACE TABLE online_retail_transaction.clv_segment AS
+SELECT
+  customer_id,
+  clv_prediction,
+  NTILE(4) OVER (ORDER BY clv_prediction ASC) AS clv_score
+FROM online_retail_transaction.customer_clv_pred;
+
+
+-- COMMAND ----------
+
+-- MAGIC %sh
+-- MAGIC ls
+-- MAGIC pwd
+-- MAGIC git status
