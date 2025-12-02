@@ -95,27 +95,21 @@ CREATE OR REPLACE TABLE online_retail_transaction.online_retail_clean  AS (
 
 -- COMMAND ----------
 
--- Date dimension
-CREATE OR REPLACE TABLE online_retail_transaction.date_dim AS (
-  SELECT
-    DISTINCT invoice_date
-  FROM online_retail_transaction.online_retail_clean
-);
+-- Customer Dimension
+CREATE OR REPLACE TABLE online_retail_transaction.customer_dim AS
+SELECT DISTINCT
+  customer_id,
+  country
+FROM online_retail_transaction.online_retail_clean
+WHERE is_anonymous = 0;
 
--- Country dimension
-CREATE OR REPLACE TABLE online_retail_transaction.country_dim AS (
-  SELECT
-    DISTINCT country
-  FROM online_retail_transaction.online_retail_clean
-);
-
---Product dimension
-CREATE OR REPLACE TABLE online_retail_transaction.product_dim AS (
-  SELECT
-    DISTINCT item_code,
-    item_description
-  FROM online_retail_transaction.online_retail_clean
-);
+-- Product Dimension
+CREATE OR REPLACE TABLE online_retail_transaction.product_dim AS
+SELECT DISTINCT
+  item_code,
+  item_description
+FROM online_retail_transaction.online_retail_clean
+WHERE quantity >0 AND price >= 0.1; 
 
 -- COMMAND ----------
 
@@ -175,16 +169,31 @@ SELECT
   rs.f_score,
   rs.m_score,
   CASE
-    WHEN r_score >= 3 AND f_score >= 3 AND m_score >= 3 THEN 'Champions'
-    WHEN r_score >= 3 AND f_score >= 3 AND m_score <  3 THEN 'Loyal'
-    WHEN m_score = 4   AND r_score <  3                 THEN 'Big Spenders'
-    WHEN r_score = 1   AND f_score >= 2 AND m_score >= 2 THEN 'At Risk'
-    WHEN r_score = 1   AND f_score <= 2 AND m_score <= 2 THEN 'Hibernating'
-    ELSE 'Others'
-  END AS Segment
+    -- 1) Lost: old and low-value
+    WHEN r_score = 1
+         AND m_score IN (3, 4) THEN 'Lost'
+
+    -- 2) Needs Attention: previously good or now slipping
+    WHEN (r_score = 1 AND m_score IN (1, 2))          -- old but historically valuable
+      OR (r_score = 2 AND m_score IN (3, 4))          -- mid-recency, low value
+    THEN 'Needs Attention'
+
+    -- 3) High Value: recent, high spend, multi-buyers
+    WHEN r_score IN (3, 4)
+         AND m_score IN (1, 2)
+         AND f_score IN (1, 2) THEN 'High Value'
+
+    -- 4) Everything else = Growth Potential
+    ELSE 'Growth Potential'
+  END AS segment
 FROM online_retail_transaction.rfm_score rs
 LEFT JOIN online_retail_transaction.rfm_raw rr
 USING (customer_id);
+
+
+-- COMMAND ----------
+
+SELECT * FROM online_retail_transaction.rfm_segment
 
 -- COMMAND ----------
 
@@ -253,10 +262,6 @@ USING (cohort_month);
 
 -- COMMAND ----------
 
-
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC # Customer Lifetime Value (CLV) Modeling
 
@@ -306,22 +311,11 @@ USING (customer_id);
 
 -- COMMAND ----------
 
-SELECT * FROM online_retail_transaction.clv_features;
-
--- COMMAND ----------
-
 --Bucket CLV into quintiles
 CREATE OR REPLACE TABLE online_retail_transaction.clv_segment AS
 SELECT
   customer_id,
   clv_prediction,
-  NTILE(4) OVER (ORDER BY clv_prediction ASC) AS clv_score
+  NTILE(5) OVER (ORDER BY clv_prediction DESC) AS clv_quintile
 FROM online_retail_transaction.customer_clv_pred;
 
-
--- COMMAND ----------
-
--- MAGIC %sh
--- MAGIC ls
--- MAGIC pwd
--- MAGIC git status
