@@ -22,7 +22,7 @@ I skip the coding tutorial and simulate a real-world C-Suite presentation, pitch
 
 ## 📊 Dashboard Preview
 
-![Dashboard Screenshot]()
+![Dashboard Screenshot](Dashboard Screenshot.png)
 *A view of the Strategic Overview page featuring RFM Segmentation, CLV Prediction Funnels, and Cohort Retention Analysis.*
 
 ---
