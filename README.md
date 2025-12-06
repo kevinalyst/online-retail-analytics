@@ -14,7 +14,7 @@ An end-to-end advanced analytics solution designed to transform raw retail trans
 **Watch the Executive Presentation Simulation:**
 I skip the coding tutorial and simulate a real-world C-Suite presentation, pitching the strategic value of this dashboard to leadership.
 
-[![Watch the Video](https://img.youtube.com/vi/qwvafbBRzrM/maxresdefault.jpg)](https://www.youtube.com/watch?v=qwvafbBRzrM)
+[![Watch the Video](<img src="https://img.youtube.com/vi/qwvafbBRzrM/maxresdefault.jpg" width="50%")](https://www.youtube.com/watch?v=qwvafbBRzrM)
 
 *(Click the image above to watch the video)*
 
@@ -22,7 +22,7 @@ I skip the coding tutorial and simulate a real-world C-Suite presentation, pitch
 
 ## 📊 Dashboard Preview
 
-![Dashboard Screenshot](Dashboard%20Screenshot.png)
+![Dashboard Screenshot](<img src="Dashboard%20Screenshot.png" width="50%" alt="Dashboard Screenshot">)
 *A view of the Strategic Overview page featuring RFM Segmentation, CLV Prediction Funnels, and Cohort Retention Analysis.*
 
 ---
