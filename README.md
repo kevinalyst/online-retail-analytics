@@ -7,6 +7,7 @@
 
 An end-to-end advanced analytics solution designed to transform raw retail transaction data into actionable business strategy. This project moves beyond standard reporting to predict Customer Lifetime Value (CLV) and identify high-probability cross-sell opportunities.
 
+**Live dashboard:** [Click to view](https://app.powerbi.com/view?r=eyJrIjoiYmRkNjM1N2QtYTAxYy00MDg0LWEyYmMtMjRmZGFhMGVkZDk3IiwidCI6ImRmNDZiODE3LTJkMWYtNGNiZS04ZDQzLTgxNWU3Y2MwOWUxYyIsImMiOjEwfQ%3D%3D)
 ---
 
 ## 📺 Project Walkthrough
